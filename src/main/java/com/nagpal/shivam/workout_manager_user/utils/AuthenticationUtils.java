@@ -1,5 +1,6 @@
 package com.nagpal.shivam.workout_manager_user.utils;
 
+import com.nagpal.shivam.workout_manager_user.enums.ResponseMessage;
 import com.nagpal.shivam.workout_manager_user.exceptions.ResponseException;
 import com.nagpal.shivam.workout_manager_user.services.JWTService;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -18,13 +19,17 @@ public class AuthenticationUtils {
         }
         String authorizationValue = request.getHeader(Constants.AUTHORIZATION);
         if (authorizationValue == null) {
+            ResponseMessage responseMessage = ResponseMessage.AUTHORIZATION_HEADER_NOT_PROVIDED;
             return Future.failedFuture(new ResponseException(HttpResponseStatus.BAD_REQUEST.code(),
-                    MessageConstants.AUTHORIZATION_HEADER_NOT_PROVIDED, null
+                    responseMessage.getMessageCode(), responseMessage.getMessage(), null
             ));
         }
         if (!authorizationValue.startsWith(Constants.BEARER_)) {
+
+            ResponseMessage responseMessage =
+                    ResponseMessage.AUTHORIZATION_TOKEN_MUST_START_WITH_THE_BEARER;
             return Future.failedFuture(new ResponseException(HttpResponseStatus.BAD_REQUEST.code(),
-                    MessageConstants.AUTHORIZATION_TOKEN_MUST_START_WITH_THE_BEARER, null
+                    responseMessage.getMessageCode(), responseMessage.getMessage(), null
             ));
         }
         String authToken = authorizationValue.substring(7);

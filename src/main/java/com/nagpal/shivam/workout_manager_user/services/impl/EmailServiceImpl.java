@@ -1,15 +1,13 @@
 package com.nagpal.shivam.workout_manager_user.services.impl;
 
 import com.nagpal.shivam.workout_manager_user.enums.Configuration;
+import com.nagpal.shivam.workout_manager_user.enums.ResponseMessage;
 import com.nagpal.shivam.workout_manager_user.services.EmailService;
-import com.nagpal.shivam.workout_manager_user.utils.MessageConstants;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mail.MailClient;
 import io.vertx.ext.mail.MailMessage;
 import io.vertx.ext.mail.MailResult;
-
-import java.text.MessageFormat;
 
 public class EmailServiceImpl implements EmailService {
     private final MailClient mailClient;
@@ -22,11 +20,11 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public Future<MailResult> sendOTPEmail(String emailId, int otp) {
-        String mailContent = MessageFormat.format(MessageConstants.OTP_EMAIL_CONTENT_FORMAT, String.valueOf(otp));
+        String mailContent = ResponseMessage.OTP_EMAIL_CONTENT_FORMAT.getMessage(otp);
         MailMessage mailMessage = new MailMessage()
                 .setTo(emailId)
                 .setFrom(config.getString(Configuration.MAIL_USERNAME.getKey()))
-                .setSubject(MessageConstants.OTP_EMAIL_SUBJECT)
+                .setSubject(ResponseMessage.OTP_EMAIL_SUBJECT.getMessage())
                 .setText(mailContent);
         return mailClient.sendMail(mailMessage);
     }

@@ -6,13 +6,13 @@ import com.nagpal.shivam.workout_manager_user.controllers.*;
 import com.nagpal.shivam.workout_manager_user.daos.*;
 import com.nagpal.shivam.workout_manager_user.daos.impl.*;
 import com.nagpal.shivam.workout_manager_user.enums.Configuration;
+import com.nagpal.shivam.workout_manager_user.enums.ResponseMessage;
 import com.nagpal.shivam.workout_manager_user.exceptions.handlers.GlobalExceptionHandler;
 import com.nagpal.shivam.workout_manager_user.helpers.UserHelper;
 import com.nagpal.shivam.workout_manager_user.services.*;
 import com.nagpal.shivam.workout_manager_user.services.impl.*;
 import com.nagpal.shivam.workout_manager_user.utils.AuthenticationUtils;
 import com.nagpal.shivam.workout_manager_user.utils.Constants;
-import com.nagpal.shivam.workout_manager_user.utils.MessageConstants;
 import io.vertx.core.*;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
@@ -20,7 +20,6 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.pgclient.PgPool;
 
-import java.text.MessageFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,14 +36,14 @@ public class MainVerticle extends AbstractVerticle {
                 .setConfig(config);
         return vertx.deployVerticle(MainVerticle.class.getName(), httpDeploymentOptions)
                 .onSuccess(result -> logger.log(Level.INFO,
-                        MessageFormat.format(MessageConstants.SERVER_STARTED_ON_PORT,
-                                String.valueOf(config.getInteger(Configuration.SERVER_PORT.getKey())))));
+                        ResponseMessage.SERVER_STARTED_ON_PORT.getMessage(
+                                String.valueOf(config.getInteger(Configuration.SERVER_PORT.getKey())))
+                ));
     }
 
     @Override
     public void start(Promise<Void> startPromise) {
-        String startVerticleMessage =
-                MessageFormat.format(MessageConstants.STARTING_VERTICLE, this.getClass().getSimpleName());
+        String startVerticleMessage = ResponseMessage.STARTING_VERTICLE.getMessage(this.getClass().getSimpleName());
         logger.info(startVerticleMessage);
         JsonObject config = this.config();
         this.setupDBClients(vertx, config)

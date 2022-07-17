@@ -14,6 +14,7 @@ import com.nagpal.shivam.workout_manager_user.dtos.response.ResponseWrapper;
 import com.nagpal.shivam.workout_manager_user.dtos.response.UserResponseDTO;
 import com.nagpal.shivam.workout_manager_user.enums.AccountStatus;
 import com.nagpal.shivam.workout_manager_user.enums.OTPPurpose;
+import com.nagpal.shivam.workout_manager_user.enums.ResponseMessage;
 import com.nagpal.shivam.workout_manager_user.exceptions.ResponseException;
 import com.nagpal.shivam.workout_manager_user.helpers.UserHelper;
 import com.nagpal.shivam.workout_manager_user.models.Role;
@@ -21,7 +22,6 @@ import com.nagpal.shivam.workout_manager_user.models.User;
 import com.nagpal.shivam.workout_manager_user.services.OTPService;
 import com.nagpal.shivam.workout_manager_user.services.SessionService;
 import com.nagpal.shivam.workout_manager_user.services.UserService;
-import com.nagpal.shivam.workout_manager_user.utils.MessageConstants;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -84,9 +84,11 @@ public class UserServiceImpl implements UserService {
                         )
                         .compose(user -> {
                             if (!BCrypt.checkpw(loginRequestDTO.getPassword(), user.getPassword())) {
+                                ResponseMessage responseMessage = ResponseMessage.INVALID_CREDENTIALS;
                                 return Future.failedFuture(
                                         new ResponseException(HttpResponseStatus.NOT_ACCEPTABLE.code(),
-                                                MessageConstants.INVALID_CREDENTIALS,
+                                                responseMessage.getMessageCode(),
+                                                responseMessage.getMessage(),
                                                 null
                                         ));
                             }
@@ -97,16 +99,19 @@ public class UserServiceImpl implements UserService {
                                         .map(otpToken -> {
                                             OTPResponseDTO otpResponseDTO = new OTPResponseDTO();
                                             otpResponseDTO.setOtpToken(otpToken);
+                                            ResponseMessage responseMessage =
+                                                    ResponseMessage.USER_ACCOUNT_IS_UNVERIFIED;
                                             return ResponseWrapper.failure(otpResponseDTO,
-                                                    MessageConstants.USER_ACCOUNT_IS_UNVERIFIED
+                                                    responseMessage.getMessageCode(),
+                                                    responseMessage.getMessage()
                                             );
                                         });
                             }
                             if (user.getAccountStatus() != AccountStatus.ACTIVE) {
+                                ResponseMessage responseMessage = ResponseMessage.USER_ACCOUNT_IS_NOT_ACTIVE;
                                 return Future.failedFuture(
                                         new ResponseException(HttpResponseStatus.NOT_ACCEPTABLE.code(),
-                                                MessageConstants.USER_ACCOUNT_IS_NOT_ACTIVE,
-                                                null
+                                                responseMessage.getMessageCode(), responseMessage.getMessage(), null
                                         ));
                             }
                             return roleDao.fetchRolesByUserIdAndDeleted(sqlConnection, user.getId(), false)
@@ -166,8 +171,10 @@ public class UserServiceImpl implements UserService {
                 )
                 .compose(user -> {
                     if (user.getEmail().equals(emailRequestDTO.getEmail())) {
+                        ResponseMessage responseMessage =
+                                ResponseMessage.NEW_EMAIL_CANNOT_BE_SAME_AS_THE_OLD_EMAIL;
                         return Future.failedFuture(new ResponseException(HttpResponseStatus.NOT_ACCEPTABLE.code(),
-                                MessageConstants.NEW_EMAIL_CANNOT_BE_SAME_AS_THE_OLD_EMAIL, null
+                                responseMessage.getMessageCode(), responseMessage.getMessage(), null
                         ));
                     }
                     return otpService.triggerEmailVerification(sqlConnection, jwtAuthTokenDTO.getUserId(),
@@ -227,18 +234,19 @@ public class UserServiceImpl implements UserService {
                 sqlConnection -> userHelper.getUserByEmail(sqlConnection, loginRequestDTO.getEmail())
                         .compose(user -> {
                             if (!BCrypt.checkpw(loginRequestDTO.getPassword(), user.getPassword())) {
+                                ResponseMessage responseMessage = ResponseMessage.INVALID_CREDENTIALS;
                                 return Future.failedFuture(
                                         new ResponseException(HttpResponseStatus.NOT_ACCEPTABLE.code(),
-                                                MessageConstants.INVALID_CREDENTIALS,
-                                                null
+                                                responseMessage.getMessageCode(), responseMessage.getMessage(), null
                                         ));
                             }
                             if (user.getAccountStatus() != AccountStatus.DEACTIVATED &&
                                     user.getAccountStatus() != AccountStatus.SCHEDULED_FOR_DELETION) {
+                                ResponseMessage responseMessage =
+                                        ResponseMessage.USER_ACCOUNT_WASN_T_DEACTIVATED_OR_MARKED_FOR_DELETION;
                                 return Future.failedFuture(
                                         new ResponseException(HttpResponseStatus.NOT_ACCEPTABLE.code(),
-                                                MessageConstants.USER_ACCOUNT_WASN_T_DEACTIVATED_OR_MARKED_FOR_DELETION,
-                                                null
+                                                responseMessage.getMessageCode(), responseMessage.getMessage(), null
                                         ));
                             }
                             return userDao.updateStatus(sqlConnection, user.getId(), AccountStatus.ACTIVE);

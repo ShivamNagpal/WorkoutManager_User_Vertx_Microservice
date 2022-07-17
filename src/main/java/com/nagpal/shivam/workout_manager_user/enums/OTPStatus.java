@@ -4,5 +4,4 @@ public enum OTPStatus {
     ACTIVE,
     USED,
     OTP_RESEND_LIMIT_REACHED,
-    ;
 }

@@ -4,5 +4,4 @@ public enum OTPPurpose {
     VERIFY_USER,
     UPDATE_EMAIL,
     RESET_PASSWORD,
-    ;
 }

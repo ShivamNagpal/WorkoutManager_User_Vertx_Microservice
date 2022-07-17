@@ -1,6 +1,7 @@
 package com.nagpal.shivam.workout_manager_user.utils;
 
 import com.nagpal.shivam.workout_manager_user.enums.Configuration;
+import com.nagpal.shivam.workout_manager_user.enums.ResponseMessage;
 import com.nagpal.shivam.workout_manager_user.exceptions.AppException;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
@@ -68,7 +69,7 @@ public class ConfigurationUtils {
                 .addStore(configFileOptions);
         String[] profiles = checkForConfigurationProfiles();
         if (profiles.length != 0) {
-            String message = MessageFormat.format(MessageConstants.VERTX_ACTIVE_PROFILES, Arrays.toString(profiles));
+            String message = ResponseMessage.VERTX_ACTIVE_PROFILES.getMessage(Arrays.toString(profiles));
             logger.log(Level.INFO, message);
             for (String profile : profiles) {
                 String path = MessageFormat.format(Constants.CONFIG_PROFILE_JSON_PATH, profile);
@@ -128,8 +129,8 @@ public class ConfigurationUtils {
             config.put(newKey, value);
         });
         if (!duplicateKeys.isEmpty()) {
-            String message = MessageFormat.format(MessageConstants.DUPLICATE_CONFIG_KEYS_PROVIDED, duplicateKeys);
-            throw new AppException(message);
+            ResponseMessage responseMessage = ResponseMessage.DUPLICATE_CONFIG_KEYS_PROVIDED;
+            throw new AppException(responseMessage.getMessageCode(), responseMessage.getMessage(duplicateKeys));
         }
     }
 }

@@ -2,6 +2,7 @@ package com.nagpal.shivam.workout_manager_user.daos.impl;
 
 import com.nagpal.shivam.workout_manager_user.daos.UserDao;
 import com.nagpal.shivam.workout_manager_user.enums.AccountStatus;
+import com.nagpal.shivam.workout_manager_user.enums.ResponseMessage;
 import com.nagpal.shivam.workout_manager_user.exceptions.ResponseException;
 import com.nagpal.shivam.workout_manager_user.models.User;
 import com.nagpal.shivam.workout_manager_user.utils.Constants;
@@ -66,9 +67,14 @@ public class UserDaoImpl implements UserDao {
                     if (throwable instanceof PgException) {
                         PgException pgException = (PgException) throwable;
                         if (pgException.getCode().equals(PgExceptionCodes.UNIQUE_KEY_CONSTRAINT_VIOLATION)) {
+                            ResponseMessage responseMessage =
+                                    ResponseMessage.UNIQUE_USER_CONSTRAINT_VIOLATION;
                             ResponseException responseException =
                                     new ResponseException(HttpResponseStatus.BAD_REQUEST.code(),
-                                            "User with " + pgException.getDetail(), null);
+                                            responseMessage.getMessageCode(),
+                                            responseMessage.getMessage(pgException.getDetail()),
+                                            null
+                                    );
                             return Future.failedFuture(responseException);
                         }
                     }

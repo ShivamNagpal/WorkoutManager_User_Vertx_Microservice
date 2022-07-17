@@ -1,8 +1,8 @@
 package com.nagpal.shivam.workout_manager_user.dtos.internal;
 
+import com.nagpal.shivam.workout_manager_user.enums.ResponseMessage;
 import com.nagpal.shivam.workout_manager_user.exceptions.ResponseException;
 import com.nagpal.shivam.workout_manager_user.utils.Constants;
-import com.nagpal.shivam.workout_manager_user.utils.MessageConstants;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
 import lombok.Getter;
@@ -19,8 +19,9 @@ public class SessionPayload {
     public static Future<SessionPayload> fromRefreshToken(String refreshToken) {
         String[] split = refreshToken.split(Constants.REFRESH_TOKEN_SEPARATOR, 2);
         if (split.length != 2) {
+            ResponseMessage responseMessage = ResponseMessage.INVALID_REFRESH_TOKEN;
             return Future.failedFuture(new ResponseException(HttpResponseStatus.BAD_REQUEST.code(),
-                    MessageConstants.INVALID_REFRESH_TOKEN, null
+                    responseMessage.getMessageCode(), responseMessage.getMessage(), null
             ));
         }
         SessionPayload sessionPayload = new SessionPayload();

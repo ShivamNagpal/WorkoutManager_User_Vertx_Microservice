@@ -8,6 +8,7 @@ import com.nagpal.shivam.workout_manager_user.dtos.internal.SessionPayload;
 import com.nagpal.shivam.workout_manager_user.dtos.request.RefreshSessionRequestDTO;
 import com.nagpal.shivam.workout_manager_user.dtos.response.LoginResponseDTO;
 import com.nagpal.shivam.workout_manager_user.enums.AccountStatus;
+import com.nagpal.shivam.workout_manager_user.enums.ResponseMessage;
 import com.nagpal.shivam.workout_manager_user.enums.SessionStatus;
 import com.nagpal.shivam.workout_manager_user.exceptions.ResponseException;
 import com.nagpal.shivam.workout_manager_user.models.Session;
@@ -15,7 +16,6 @@ import com.nagpal.shivam.workout_manager_user.models.User;
 import com.nagpal.shivam.workout_manager_user.services.JWTService;
 import com.nagpal.shivam.workout_manager_user.services.SessionService;
 import com.nagpal.shivam.workout_manager_user.utils.Constants;
-import com.nagpal.shivam.workout_manager_user.utils.MessageConstants;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
@@ -68,41 +68,59 @@ public class SessionServiceImpl implements SessionService {
                         sessionDao.findById(mongoClient, sessionPayload.getSessionId())
                                 .compose(sessionOptional -> {
                                     if (sessionOptional.isEmpty()) {
+                                        ResponseMessage responseMessage = ResponseMessage.INVALID_REFRESH_TOKEN;
                                         return Future.failedFuture(
                                                 new ResponseException(HttpResponseStatus.BAD_REQUEST.code(),
-                                                        MessageConstants.INVALID_REFRESH_TOKEN, null)
+                                                        responseMessage.getMessageCode(), responseMessage.getMessage(),
+                                                        null
+                                                )
                                         );
                                     }
                                     Session session = sessionOptional.get();
                                     if (session.getExpiryTime() < System.currentTimeMillis()) {
+                                        ResponseMessage responseMessage = ResponseMessage.SESSION_HAS_EXPIRED;
                                         return Future.failedFuture(
                                                 new ResponseException(HttpResponseStatus.NOT_ACCEPTABLE.code(),
-                                                        MessageConstants.SESSION_HAS_EXPIRED, null)
+                                                        responseMessage.getMessageCode(), responseMessage.getMessage(),
+                                                        null
+                                                )
                                         );
                                     }
                                     if (session.getStatus() != SessionStatus.ACTIVE) {
+                                        ResponseMessage responseMessage = ResponseMessage.SESSION_IS_NOT_ACTIVE;
                                         return Future.failedFuture(
                                                 new ResponseException(HttpResponseStatus.NOT_ACCEPTABLE.code(),
-                                                        MessageConstants.SESSION_IS_NOT_ACTIVE, null)
+                                                        responseMessage.getMessageCode(), responseMessage.getMessage(),
+                                                        null
+                                                )
                                         );
                                     }
                                     return pgPool.withTransaction(
                                             sqlConnection -> userDao.getById(sqlConnection, session.getUserId())
                                                     .compose(userOptional -> {
                                                         if (userOptional.isEmpty()) {
+                                                            ResponseMessage responseMessage =
+                                                                    ResponseMessage.USER_NOT_FOUND;
                                                             return Future.failedFuture(
                                                                     new ResponseException(
                                                                             HttpResponseStatus.NOT_ACCEPTABLE.code(),
-                                                                            MessageConstants.USER_NOT_FOUND, null)
+                                                                            responseMessage.getMessageCode(),
+                                                                            responseMessage.getMessage(),
+                                                                            null
+                                                                    )
                                                             );
                                                         }
                                                         User user = userOptional.get();
                                                         if (user.getAccountStatus() != AccountStatus.ACTIVE) {
+                                                            ResponseMessage responseMessage =
+                                                                    ResponseMessage.USER_ACCOUNT_IS_NOT_ACTIVE;
                                                             return Future.failedFuture(
                                                                     new ResponseException(
                                                                             HttpResponseStatus.NOT_ACCEPTABLE.code(),
-                                                                            MessageConstants.USER_ACCOUNT_IS_NOT_ACTIVE,
-                                                                            null)
+                                                                            responseMessage.getMessageCode(),
+                                                                            responseMessage.getMessage(),
+                                                                            null
+                                                                    )
                                                             );
                                                         }
                                                         return Future.succeededFuture();
@@ -122,12 +140,18 @@ public class SessionServiceImpl implements SessionService {
                                                                                 session.getId(), SessionStatus.VOID
                                                                         );
                                                             }
-                                                            return future.compose(v -> Future.failedFuture(
-                                                                    new ResponseException(
-                                                                            HttpResponseStatus.BAD_REQUEST.code(),
-                                                                            MessageConstants.INVALID_REFRESH_TOKEN, null
-                                                                    )
-                                                            ));
+                                                            return future.compose(v -> {
+                                                                ResponseMessage responseMessage =
+                                                                        ResponseMessage.INVALID_REFRESH_TOKEN;
+                                                                return Future.failedFuture(
+                                                                        new ResponseException(
+                                                                                HttpResponseStatus.BAD_REQUEST.code(),
+                                                                                responseMessage.getMessageCode(),
+                                                                                responseMessage.getMessage(),
+                                                                                null
+                                                                        )
+                                                                );
+                                                            });
                                                         }
                                                         session.refresh();
                                                         sessionPayload.setRefreshToken(

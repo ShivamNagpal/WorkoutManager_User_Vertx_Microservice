@@ -1,5 +1,6 @@
 package com.nagpal.shivam.workout_manager_user.utils;
 
+import com.nagpal.shivam.workout_manager_user.enums.ResponseMessage;
 import com.nagpal.shivam.workout_manager_user.exceptions.ResponseException;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
@@ -7,7 +8,6 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
-import java.text.MessageFormat;
 import java.util.Map;
 import java.util.Objects;
 
@@ -19,8 +19,9 @@ public class RequestValidationUtils {
     public static Future<JsonObject> fetchBodyAsJson(RoutingContext routingContext) {
         JsonObject bodyAsJson = routingContext.getBodyAsJson();
         if (Objects.isNull(bodyAsJson)) {
+            ResponseMessage responseMessage = ResponseMessage.REQUEST_BODY_NOT_PROVIDED;
             return Future.failedFuture(new ResponseException(HttpResponseStatus.BAD_REQUEST.code(),
-                    MessageConstants.REQUEST_BODY_NOT_PROVIDED, null));
+                    responseMessage.getMessageCode(), responseMessage.getMessage(), null));
         }
         return Future.succeededFuture(bodyAsJson);
     }
@@ -28,20 +29,21 @@ public class RequestValidationUtils {
     public static void validateNotNull(JsonObject requestBody, String key, Map<String, String> errors) {
         Object value = requestBody.getValue(key);
         if (Objects.isNull(value)) {
-            errors.put(key, MessageConstants.MUST_NOT_BE_A_NULL_VALUE);
+            errors.put(key, ResponseMessage.MUST_NOT_BE_A_NULL_VALUE.getMessage());
         }
     }
 
     public static void validateNotBlank(JsonObject requestBody, String key, Map<String, String> errors) {
         String value = requestBody.getString(key);
         if (Objects.isNull(value) || value.isBlank()) {
-            errors.put(key, MessageConstants.MUST_NOT_BE_BLANK);
+            errors.put(key, ResponseMessage.MUST_NOT_BE_BLANK.getMessage());
         }
     }
 
     public static <T> Future<T> formErrorResponse(Map<String, String> errors) {
+        ResponseMessage responseMessage = ResponseMessage.VALIDATION_ERRORS_IN_THE_REQUEST;
         return Future.failedFuture(new ResponseException(HttpResponseStatus.BAD_REQUEST.code(),
-                MessageConstants.VALIDATION_ERRORS_IN_THE_REQUEST, JsonObject.mapFrom(errors)));
+                responseMessage.getMessageCode(), responseMessage.getMessage(), JsonObject.mapFrom(errors)));
     }
 
     public static Future<Boolean> getBooleanQueryParam(HttpServerRequest request, String key) {
@@ -54,8 +56,9 @@ public class RequestValidationUtils {
         } else if (paramVal.equalsIgnoreCase(Constants.FALSE)) {
             return Future.succeededFuture(false);
         }
+        ResponseMessage responseMessage = ResponseMessage.QUERY_PARAM_MUST_HAVE_ONLY_BOOLEAN_VALUES;
         return Future.failedFuture(new ResponseException(HttpResponseStatus.BAD_REQUEST.code(),
-                MessageFormat.format(MessageConstants.QUERY_PARAM_MUST_HAVE_ONLY_BOOLEAN_VALUES, key), null
+                responseMessage.getMessageCode(), responseMessage.getMessage(key), null
         ));
     }
 

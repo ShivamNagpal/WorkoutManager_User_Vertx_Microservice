@@ -1,13 +1,12 @@
 package com.nagpal.shivam.workout_manager_user.exceptions.handlers;
 
 import com.nagpal.shivam.workout_manager_user.dtos.response.ResponseWrapper;
+import com.nagpal.shivam.workout_manager_user.enums.ResponseMessage;
 import com.nagpal.shivam.workout_manager_user.exceptions.ResponseException;
-import com.nagpal.shivam.workout_manager_user.utils.MessageConstants;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.Json;
 
-import java.text.MessageFormat;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,19 +24,21 @@ public class GlobalExceptionHandler {
             ResponseException responseException = (ResponseException) throwable;
             Object responseExceptionPayload = responseException.getPayload();
             if (Objects.nonNull(responseExceptionPayload)) {
-                String message = MessageFormat.format(MessageConstants.RESPONSE_EXCEPTION_PAYLOAD,
+                String message = ResponseMessage.RESPONSE_EXCEPTION_PAYLOAD.getMessage(
                         Json.encodePrettily(responseExceptionPayload));
                 logger.log(Level.SEVERE, message);
             }
             ResponseWrapper<Object> failureResponseWrapper =
-                    ResponseWrapper.failure(responseExceptionPayload, responseException.getMessage());
+                    ResponseWrapper.failure(responseExceptionPayload, responseException.getMessageCode(),
+                            responseException.getMessage()
+                    );
             httpServerResponse.setStatusCode(responseException.getStatus())
                     .end(Json.encodePrettily(failureResponseWrapper));
         } else {
-            HttpResponseStatus internalServerError = HttpResponseStatus.INTERNAL_SERVER_ERROR;
+            ResponseMessage responseMessage = ResponseMessage.INTERNAL_SERVER_ERROR;
             ResponseWrapper<Object> failureResponseWrapper =
-                    ResponseWrapper.failure(null, internalServerError.reasonPhrase());
-            httpServerResponse.setStatusCode(internalServerError.code())
+                    ResponseWrapper.failure(null, responseMessage.getMessageCode(), responseMessage.getMessage());
+            httpServerResponse.setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code())
                     .end(Json.encodePrettily(failureResponseWrapper));
         }
     }

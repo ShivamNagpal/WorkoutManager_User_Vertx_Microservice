@@ -8,6 +8,7 @@ import com.nagpal.shivam.workout_manager_user.dtos.request.VerifyOTPRequestDTO;
 import com.nagpal.shivam.workout_manager_user.dtos.response.OTPResponseDTO;
 import com.nagpal.shivam.workout_manager_user.enums.OTPPurpose;
 import com.nagpal.shivam.workout_manager_user.enums.OTPStatus;
+import com.nagpal.shivam.workout_manager_user.enums.ResponseMessage;
 import com.nagpal.shivam.workout_manager_user.enums.RoleName;
 import com.nagpal.shivam.workout_manager_user.exceptions.ResponseException;
 import com.nagpal.shivam.workout_manager_user.helpers.UserHelper;
@@ -17,7 +18,6 @@ import com.nagpal.shivam.workout_manager_user.services.JWTService;
 import com.nagpal.shivam.workout_manager_user.services.OTPService;
 import com.nagpal.shivam.workout_manager_user.services.SessionService;
 import com.nagpal.shivam.workout_manager_user.utils.Constants;
-import com.nagpal.shivam.workout_manager_user.utils.MessageConstants;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
@@ -27,7 +27,6 @@ import io.vertx.sqlclient.SqlClient;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 
 import java.security.SecureRandom;
-import java.text.MessageFormat;
 import java.time.OffsetDateTime;
 import java.util.Random;
 
@@ -78,14 +77,17 @@ public class OTPServiceImpl implements OTPService {
                         )
                         .compose(otpOptional -> {
                             if (otpOptional.isEmpty()) {
+                                ResponseMessage responseMessage =
+                                        ResponseMessage.NO_ACTIVE_TRIGGERED_OTP_FOUND;
                                 return Future.failedFuture(new ResponseException(HttpResponseStatus.NOT_ACCEPTABLE.code(),
-                                        MessageConstants.NO_ACTIVE_TRIGGERED_OTP_FOUND, null
+                                        responseMessage.getMessageCode(), responseMessage.getMessage(), null
                                 ));
                             }
                             OTP otp = otpOptional.get();
                             if (!BCrypt.checkpw(String.valueOf(verifyOTPRequestDTO.getOtp()), otp.getOtpHash())) {
+                                ResponseMessage responseMessage = ResponseMessage.INCORRECT_OTP;
                                 return Future.failedFuture(new ResponseException(HttpResponseStatus.NOT_ACCEPTABLE.code(),
-                                        MessageConstants.INCORRECT_OTP, null
+                                        responseMessage.getMessageCode(), responseMessage.getMessage(), null
                                 ));
                             }
                             return Future.succeededFuture(otp);
@@ -132,10 +134,8 @@ public class OTPServiceImpl implements OTPService {
                                     break;
                                 default:
                                     actionPostOTPVerification = Future.failedFuture(
-                                            MessageFormat.format(
-                                                    MessageConstants.POST_VERIFICATION_ACTION_NOT_MAPPED_FOR_THE_OTP_PURPOSE,
-                                                    jwtotpTokenDTO.getOtpPurpose()
-                                            )
+                                            ResponseMessage.POST_VERIFICATION_ACTION_NOT_MAPPED_FOR_THE_OTP_PURPOSE.getMessage(
+                                                    jwtotpTokenDTO.getOtpPurpose())
                                     );
                             }
                             return actionPostOTPVerification;
@@ -166,9 +166,12 @@ public class OTPServiceImpl implements OTPService {
                                 otp.setOtpStatus(OTPStatus.OTP_RESEND_LIMIT_REACHED);
                                 future = otpDao.update(sqlClient, otp);
                             }
-                            return future.compose(v -> Future.failedFuture(
-                                    new ResponseException(HttpResponseStatus.NOT_ACCEPTABLE.code(),
-                                            MessageConstants.OTP_RESEND_LIMIT_EXCEEDED, null)));
+                            return future.compose(v -> {
+                                ResponseMessage responseMessage = ResponseMessage.OTP_RESEND_LIMIT_EXCEEDED;
+                                return Future.failedFuture(
+                                        new ResponseException(HttpResponseStatus.NOT_ACCEPTABLE.code(),
+                                                responseMessage.getMessageCode(), responseMessage.getMessage(), null));
+                            });
                         }
                         saveFuture = otpDao.update(sqlClient, otp).map(otpValue);
                     } else {

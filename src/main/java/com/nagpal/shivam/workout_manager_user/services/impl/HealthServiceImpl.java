@@ -1,8 +1,8 @@
 package com.nagpal.shivam.workout_manager_user.services.impl;
 
 import com.nagpal.shivam.workout_manager_user.daos.HealthDao;
+import com.nagpal.shivam.workout_manager_user.enums.ResponseMessage;
 import com.nagpal.shivam.workout_manager_user.utils.Constants;
-import com.nagpal.shivam.workout_manager_user.utils.MessageConstants;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.ext.mongo.MongoClient;
@@ -27,12 +27,12 @@ public class HealthServiceImpl implements com.nagpal.shivam.workout_manager_user
     public Future<String> checkDbHealth() {
         Future<Void> sqlClientHealthFuture = healthDao.pgPoolHealthCheck(pgPool)
                 .recover(throwable -> {
-                    logger.log(Level.SEVERE, MessageConstants.PG_POOL_HEALTH_CHECK_FAILED, throwable);
+                    logger.log(Level.SEVERE, ResponseMessage.PG_POOL_HEALTH_CHECK_FAILED.getMessage(), throwable);
                     return Future.failedFuture(throwable);
                 });
         Future<Void> mongoClientHealthCheckFuture = healthDao.mongoClientHealthCheck(mongoClient)
                 .recover(throwable -> {
-                    logger.log(Level.SEVERE, MessageConstants.MONGO_CLIENT_HEALTH_CHECK_FAILED, throwable);
+                    logger.log(Level.SEVERE, ResponseMessage.MONGO_CLIENT_HEALTH_CHECK_FAILED.getMessage(), throwable);
                     return Future.failedFuture(throwable);
                 });
         return CompositeFuture.join(sqlClientHealthFuture, mongoClientHealthCheckFuture)

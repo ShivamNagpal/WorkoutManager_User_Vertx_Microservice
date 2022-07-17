@@ -5,6 +5,7 @@ import com.nagpal.shivam.workout_manager_user.daos.SessionDao;
 import com.nagpal.shivam.workout_manager_user.daos.UserDao;
 import com.nagpal.shivam.workout_manager_user.daos.impl.SessionDaoImpl;
 import com.nagpal.shivam.workout_manager_user.daos.impl.UserDaoImpl;
+import com.nagpal.shivam.workout_manager_user.enums.ResponseMessage;
 import com.nagpal.shivam.workout_manager_user.helpers.UserHelper;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -36,8 +37,11 @@ public class PeriodicTasksUtil {
 
     private static void setupDeletionCron(Vertx vertx, JsonObject config, PgPool pgPool, UserHelper userHelper) {
         vertx.setPeriodic(config.getLong(Constants.DELETION_CRON_DELAY), id -> userHelper.deleteScheduleAccount(pgPool)
-                .onSuccess(v -> logger.log(Level.INFO, MessageConstants.DELETION_CRON_EXECUTED_SUCCESSFULLY))
-                .onFailure(throwable -> logger.log(Level.SEVERE, MessageConstants.DELETION_CRON_FAILED, throwable))
+                .onSuccess(v -> logger.log(Level.INFO, ResponseMessage.DELETION_CRON_EXECUTED_SUCCESSFULLY.getMessage()
+                ))
+                .onFailure(throwable -> logger.log(Level.SEVERE, ResponseMessage.DELETION_CRON_FAILED.getMessage(),
+                        throwable
+                ))
         );
     }
 }

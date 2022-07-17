@@ -4,5 +4,4 @@ public enum SessionStatus {
     ACTIVE,
     CLOSED,
     VOID,
-    ;
 }

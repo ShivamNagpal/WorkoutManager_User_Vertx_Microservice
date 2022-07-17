@@ -9,11 +9,11 @@ import com.nagpal.shivam.workout_manager_user.dtos.internal.JWTAuthTokenDTO;
 import com.nagpal.shivam.workout_manager_user.dtos.internal.JWTOTPTokenDTO;
 import com.nagpal.shivam.workout_manager_user.enums.Configuration;
 import com.nagpal.shivam.workout_manager_user.enums.OTPPurpose;
+import com.nagpal.shivam.workout_manager_user.enums.ResponseMessage;
 import com.nagpal.shivam.workout_manager_user.enums.RoleName;
 import com.nagpal.shivam.workout_manager_user.exceptions.ResponseException;
 import com.nagpal.shivam.workout_manager_user.services.JWTService;
 import com.nagpal.shivam.workout_manager_user.utils.Constants;
-import com.nagpal.shivam.workout_manager_user.utils.MessageConstants;
 import com.nagpal.shivam.workout_manager_user.utils.UtilMethods;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
@@ -77,9 +77,10 @@ public class JWTServiceImpl implements JWTService {
         try {
             decodedJWT = otpTokenVerifier.verify(otpToken);
         } catch (JWTVerificationException e) {
+            ResponseMessage responseMessage = ResponseMessage.INVALID_OTP_TOKEN;
             return Future.failedFuture(
-                    new ResponseException(HttpResponseStatus.BAD_REQUEST.code(), MessageConstants.INVALID_OTP_TOKEN,
-                            null
+                    new ResponseException(HttpResponseStatus.BAD_REQUEST.code(), responseMessage.getMessageCode(),
+                            responseMessage.getMessage(), null
                     )
             );
         }
@@ -110,9 +111,10 @@ public class JWTServiceImpl implements JWTService {
             authTokenVerifier.verify(authToken);
             return Future.succeededFuture();
         } catch (JWTVerificationException e) {
+            ResponseMessage responseMessage = ResponseMessage.INVALID_AUTH_TOKEN;
             return Future.failedFuture(
-                    new ResponseException(HttpResponseStatus.BAD_REQUEST.code(), MessageConstants.INVALID_AUTH_TOKEN,
-                            null
+                    new ResponseException(HttpResponseStatus.BAD_REQUEST.code(), responseMessage.getMessageCode(),
+                            responseMessage.getMessage(), null
                     )
             );
         }
@@ -136,8 +138,9 @@ public class JWTServiceImpl implements JWTService {
                 return Future.succeededFuture();
             }
         }
+        ResponseMessage responseMessage = ResponseMessage.USER_IS_NOT_AUTHORIZED_TO_ACCESS;
         return Future.failedFuture(new ResponseException(HttpResponseStatus.UNAUTHORIZED.code(),
-                MessageConstants.USER_IS_NOT_AUTHORIZED_TO_ACCESS, null
+                responseMessage.getMessageCode(), responseMessage.getMessage(), null
         ));
     }
 }

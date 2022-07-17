@@ -2,12 +2,12 @@ package com.nagpal.shivam.workout_manager_user.controllers;
 
 import com.nagpal.shivam.workout_manager_user.dtos.request.VerifyOTPRequestDTO;
 import com.nagpal.shivam.workout_manager_user.dtos.response.ResponseWrapper;
+import com.nagpal.shivam.workout_manager_user.enums.ResponseMessage;
 import com.nagpal.shivam.workout_manager_user.exceptions.ResponseException;
 import com.nagpal.shivam.workout_manager_user.exceptions.handlers.GlobalExceptionHandler;
 import com.nagpal.shivam.workout_manager_user.services.JWTService;
 import com.nagpal.shivam.workout_manager_user.services.OTPService;
 import com.nagpal.shivam.workout_manager_user.utils.Constants;
-import com.nagpal.shivam.workout_manager_user.utils.MessageConstants;
 import com.nagpal.shivam.workout_manager_user.utils.RequestValidationUtils;
 import com.nagpal.shivam.workout_manager_user.utils.RoutingConstants;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -43,8 +43,10 @@ public class OTPController {
                 .handler(routingContext -> {
                     String otpToken = routingContext.request().getHeader(Constants.OTP_TOKEN);
                     if (otpToken == null) {
+                        ResponseMessage responseMessage = ResponseMessage.OTP_TOKEN_NOT_PROVIDED;
                         ResponseException exception = new ResponseException(HttpResponseStatus.BAD_REQUEST.code(),
-                                MessageConstants.OTP_TOKEN_NOT_PROVIDED,
+                                responseMessage.getMessageCode(),
+                                responseMessage.getMessage(),
                                 null
                         );
                         GlobalExceptionHandler.handle(exception, routingContext.response());
@@ -65,8 +67,10 @@ public class OTPController {
                 .handler(routingContext -> {
                     String otpToken = routingContext.request().getHeader(Constants.OTP_TOKEN);
                     if (otpToken == null) {
+                        ResponseMessage responseMessage = ResponseMessage.OTP_TOKEN_NOT_PROVIDED;
                         ResponseException exception = new ResponseException(HttpResponseStatus.BAD_REQUEST.code(),
-                                MessageConstants.OTP_TOKEN_NOT_PROVIDED,
+                                responseMessage.getMessageCode(),
+                                responseMessage.getMessage(),
                                 null
                         );
                         GlobalExceptionHandler.handle(exception, routingContext.response());

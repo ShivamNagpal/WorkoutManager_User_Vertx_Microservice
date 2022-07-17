@@ -1,12 +1,12 @@
 package com.nagpal.shivam.workout_manager_user.services.impl;
 
 import com.nagpal.shivam.workout_manager_user.daos.RoleDao;
+import com.nagpal.shivam.workout_manager_user.enums.ResponseMessage;
 import com.nagpal.shivam.workout_manager_user.enums.RoleName;
 import com.nagpal.shivam.workout_manager_user.exceptions.ResponseException;
 import com.nagpal.shivam.workout_manager_user.helpers.UserHelper;
 import com.nagpal.shivam.workout_manager_user.models.Role;
 import com.nagpal.shivam.workout_manager_user.services.RoleService;
-import com.nagpal.shivam.workout_manager_user.utils.MessageConstants;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Future;
 import io.vertx.pgclient.PgPool;
@@ -33,8 +33,9 @@ public class RoleServiceImpl implements RoleService {
                     }
                     Role role = roleOptional.get();
                     if (role.getDeleted() != null && !role.getDeleted()) {
+                        ResponseMessage responseMessage = ResponseMessage.USER_IS_ALREADY_A_MANAGER;
                         return Future.failedFuture(new ResponseException(HttpResponseStatus.BAD_REQUEST.code(),
-                                MessageConstants.USER_IS_ALREADY_A_MANAGER, null
+                                responseMessage.getMessageCode(), responseMessage.getMessage(), null
                         ));
                     }
                     return roleDao.updateRoleDeletedStatus(sqlConnection, role.getId(), false);
@@ -48,14 +49,16 @@ public class RoleServiceImpl implements RoleService {
                 .compose(user -> roleDao.fetchRoleByUserIdAndRoleName(sqlConnection, userId, RoleName.MANAGER))
                 .compose(roleOptional -> {
                     if (roleOptional.isEmpty()) {
+                        ResponseMessage responseMessage = ResponseMessage.USER_IS_NOT_A_MANAGER;
                         return Future.failedFuture(new ResponseException(HttpResponseStatus.BAD_REQUEST.code(),
-                                MessageConstants.USER_IS_NOT_A_MANAGER, null
+                                responseMessage.getMessageCode(), responseMessage.getMessage(), null
                         ));
                     }
                     Role role = roleOptional.get();
                     if (role.getDeleted() != null && role.getDeleted()) {
+                        ResponseMessage responseMessage = ResponseMessage.USER_IS_NOT_A_MANAGER;
                         return Future.failedFuture(new ResponseException(HttpResponseStatus.BAD_REQUEST.code(),
-                                MessageConstants.USER_IS_NOT_A_MANAGER, null
+                                responseMessage.getMessageCode(), responseMessage.getMessage(), null
                         ));
                     }
                     return roleDao.updateRoleDeletedStatus(sqlConnection, role.getId(), true);

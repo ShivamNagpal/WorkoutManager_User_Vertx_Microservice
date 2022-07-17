@@ -46,6 +46,7 @@ public class Constants {
     public static final String DELETION_SELECT_PERIOD_IN_DAYS = "deletion.cron.select.period.in.days";
     public static final String DELETION_CRON_DELAY = "deletion.cron.delay";
     public static final String DELETION_CRON_BATCH_SIZE = "deletion.cron.batch.size";
+    public static final String RESPONSE_MESSAGE_PREFIX = "WM-U-";
 
     private Constants() {
     }

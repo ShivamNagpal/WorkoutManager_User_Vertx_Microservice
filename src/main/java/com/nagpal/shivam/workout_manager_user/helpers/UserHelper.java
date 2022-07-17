@@ -4,10 +4,10 @@ import com.nagpal.shivam.workout_manager_user.daos.SessionDao;
 import com.nagpal.shivam.workout_manager_user.daos.UserDao;
 import com.nagpal.shivam.workout_manager_user.dtos.request.PasswordUpdateRequestDTO;
 import com.nagpal.shivam.workout_manager_user.enums.AccountStatus;
+import com.nagpal.shivam.workout_manager_user.enums.ResponseMessage;
 import com.nagpal.shivam.workout_manager_user.exceptions.ResponseException;
 import com.nagpal.shivam.workout_manager_user.models.User;
 import com.nagpal.shivam.workout_manager_user.utils.Constants;
-import com.nagpal.shivam.workout_manager_user.utils.MessageConstants;
 import com.nagpal.shivam.workout_manager_user.utils.ModelConstants;
 import com.nagpal.shivam.workout_manager_user.utils.UtilMethods;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -37,9 +37,10 @@ public class UserHelper {
         return userDao.getById(sqlConnection, userId)
                 .compose(userOptional -> {
                     if (userOptional.isEmpty()) {
+                        ResponseMessage responseMessage = ResponseMessage.USER_NOT_FOUND;
                         return Future.failedFuture(
                                 new ResponseException(HttpResponseStatus.BAD_REQUEST.code(),
-                                        MessageConstants.USER_NOT_FOUND, null)
+                                        responseMessage.getMessageCode(), responseMessage.getMessage(), null)
                         );
                     }
                     return Future.succeededFuture(userOptional.get());
@@ -50,8 +51,9 @@ public class UserHelper {
         return userDao.getUserByEmail(sqlConnection, email)
                 .compose(userOptional -> {
                     if (userOptional.isEmpty()) {
+                        ResponseMessage responseMessage = ResponseMessage.USER_NOT_FOUND;
                         return Future.failedFuture(new ResponseException(HttpResponseStatus.BAD_REQUEST.code(),
-                                MessageConstants.USER_NOT_FOUND,
+                                responseMessage.getMessageCode(), responseMessage.getMessage(),
                                 null
                         ));
                     }
@@ -72,8 +74,10 @@ public class UserHelper {
                                                            User user,
                                                            PasswordUpdateRequestDTO passwordUpdateRequestDTO) {
         if (BCrypt.checkpw(passwordUpdateRequestDTO.getPlainPassword(), user.getPassword())) {
+            ResponseMessage responseMessage =
+                    ResponseMessage.NEW_PASSWORD_CANNOT_BE_SAME_AS_THE_OLD_PASSWORD;
             return Future.failedFuture(new ResponseException(HttpResponseStatus.NOT_ACCEPTABLE.code(),
-                    MessageConstants.NEW_PASSWORD_CANNOT_BE_SAME_AS_THE_OLD_PASSWORD, null
+                    responseMessage.getMessageCode(), responseMessage.getMessage(), null
             ));
         }
         return userDao.updatePassword(sqlConnection, user.getId(), passwordUpdateRequestDTO.getHashedPassword())

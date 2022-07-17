@@ -6,5 +6,4 @@ public enum AccountStatus {
     DEACTIVATED,
     SCHEDULED_FOR_DELETION,
     DELETED,
-    ;
 }

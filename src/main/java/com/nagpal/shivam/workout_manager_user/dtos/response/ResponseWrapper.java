@@ -13,21 +13,23 @@ public class ResponseWrapper<T> {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private T payload;
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String messageCode;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String message;
 
-    public static <T> ResponseWrapper<T> success(T payload, String message) {
-        return new ResponseWrapper<>(true, payload, message);
+    public static <T> ResponseWrapper<T> success(T payload, String messageCode, String message) {
+        return new ResponseWrapper<>(true, payload, messageCode, message);
     }
 
     public static <T> ResponseWrapper<T> success(T payload) {
-        return success(payload, null);
+        return success(payload, null, null);
     }
 
-    public static <T> ResponseWrapper<T> failure(T payload, String message) {
-        return new ResponseWrapper<>(false, payload, message);
+    public static <T> ResponseWrapper<T> failure(T payload, String messageCode, String message) {
+        return new ResponseWrapper<>(false, payload, messageCode, message);
     }
 
     public static <T> ResponseWrapper<T> failure(T payload) {
-        return failure(payload, null);
+        return failure(payload, null, null);
     }
 }
